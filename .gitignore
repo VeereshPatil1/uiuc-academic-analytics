@@ -1,0 +1,5 @@
+# Virtual environment (the mini-fridge)
+.venv/
+
+# Python's temporary files
+__pycache__/
