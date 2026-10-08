@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from gpa import (
+    clean_courses,
     department_summary,
     grade_to_points,
     projected_gpa,
@@ -9,6 +10,7 @@ from gpa import (
     semester_sort_key,
     semester_summary,
 )
+
 
 def test_a_plus_counts_same_as_a():
     assert grade_to_points("A+") == 4.0
@@ -56,6 +58,7 @@ def test_department_gpa_is_weighted_by_credits():
     assert summary.loc["CS", "gpa"] == pytest.approx(3.5)
     assert summary.loc["MATH", "gpa"] == pytest.approx(3.0)
 
+
 def test_projected_gpa_adds_planned_courses():
     df = pd.DataFrame({
         "semester": ["Fall 2024"],
@@ -80,4 +83,36 @@ def test_required_gpa_to_reach_target():
     # Current: 2.0 over 4 credits. To reach 3.0 over 8 total credits,
     # you need 24 total points - 8 current = 16 points over 4 credits = 4.0
     assert required_gpa(df, target_gpa=3.0, next_credits=4) == pytest.approx(4.0)
-    
+
+
+def test_clean_courses_tidies_text():
+    df = pd.DataFrame({
+        "semester": [" fall 2024"],
+        "course": ["cs 124"],
+        "department": [" cs "],
+        "credits": ["3"],
+        "grade": ["a-"],
+    })
+    row = clean_courses(df).iloc[0]
+    assert row["semester"] == "Fall 2024"
+    assert row["department"] == "CS"
+    assert row["grade"] == "A-"
+    assert row["credits"] == 3
+
+
+def test_clean_courses_rejects_missing_column():
+    df = pd.DataFrame({"course": ["CS 124"], "grade": ["A"]})
+    with pytest.raises(ValueError, match="Missing column"):
+        clean_courses(df)
+
+
+def test_clean_courses_rejects_bad_grade():
+    df = pd.DataFrame({
+        "semester": ["Fall 2024"],
+        "course": ["CS 124"],
+        "department": ["CS"],
+        "credits": [3],
+        "grade": ["Z"],
+    })
+    with pytest.raises(ValueError, match="not a valid grade"):
+        clean_courses(df)

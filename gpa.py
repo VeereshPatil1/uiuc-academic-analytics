@@ -1,3 +1,4 @@
+import pandas as pd
 # UIUC grade scale: letter grade -> grade points
 GRADE_POINTS = {
     "A+": 4.00, "A": 4.00, "A-": 3.67,
@@ -82,3 +83,33 @@ def required_gpa(df, target_gpa, next_credits):
     current_credits = current["credits"].sum()
     needed_points = target_gpa * (current_credits + next_credits) - current_points
     return needed_points / next_credits
+
+REQUIRED_COLUMNS = ["semester", "course", "department", "credits", "grade"]
+
+
+def clean_courses(df):
+    """Check a courses table and tidy it up. Raises ValueError with a helpful message if something is wrong."""
+    missing = [column for column in REQUIRED_COLUMNS if column not in df.columns]
+    if missing:
+        raise ValueError(
+            f"Missing column(s): {', '.join(missing)}. "
+            f"Your file needs these columns: {', '.join(REQUIRED_COLUMNS)}."
+        )
+
+    df = df[REQUIRED_COLUMNS].dropna().copy()
+
+    # Tidy text so "cs" and " CS " count as the same department
+    df["semester"] = df["semester"].astype(str).str.strip().str.title()
+    df["course"] = df["course"].astype(str).str.strip().str.upper()
+    df["department"] = df["department"].astype(str).str.strip().str.upper()
+    df["grade"] = df["grade"].astype(str).str.strip().str.upper()
+
+    df["credits"] = pd.to_numeric(df["credits"], errors="coerce")
+    if df["credits"].isna().any() or (df["credits"] <= 0).any():
+        raise ValueError("Every course needs a credits value that is a number greater than 0.")
+
+    # These raise a clear ValueError if any grade or semester is invalid
+    df["grade"].apply(grade_to_points)
+    df["semester"].apply(semester_sort_key)
+
+    return df

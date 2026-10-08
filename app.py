@@ -9,10 +9,17 @@ from charts import (
     gpa_over_time_chart,
     grade_distribution_chart,
 )
-from gpa import GRADE_POINTS, department_summary, projected_gpa, required_gpa, semester_summary
+from gpa import (  # NEW: clean_courses
+    GRADE_POINTS,
+    clean_courses,
+    department_summary,
+    projected_gpa,
+    required_gpa,
+    semester_summary,
+)
 
-# Semester choices for the dropdown: Spring 2022, Summer 2022, Fall 2022, ... Fall 2030
-SEMESTERS = [f"{term} {year}" for year in range(2022, 2031) for term in ["Spring", "Summer", "Fall"]]
+# Semester choices for the dropdown: Spring 2018, Summer 2018, Fall 2018, ... Fall 2032
+SEMESTERS = [f"{term} {year}" for year in range(2018, 2033) for term in ["Spring", "Summer", "Fall"]]  # NEW: wider range
 
 
 def empty_courses():
@@ -39,16 +46,26 @@ if "courses" not in st.session_state:
     st.session_state.courses = empty_courses()
     st.session_state.editor_version = 0
 
-st.title("UIUC Academic Analytics Dashboard")
+st.title("🎓 UIUC Academic Analytics Dashboard")
 st.write("Track your courses, GPA, and academic trends.")
 
-# --- Sidebar buttons ---
+# --- Sidebar: load, clear, upload ---
 with st.sidebar:
     st.header("Data")
     if st.button("📂 Load sample data", width="stretch"):
         replace_courses(pd.read_csv("data/sample_courses.csv"))
     if st.button("🗑️ Clear all courses", width="stretch"):
         replace_courses(empty_courses())
+
+    # NEW: upload a CSV (only processed once per new file)
+    uploaded = st.file_uploader("📤 Upload a courses CSV", type="csv")
+    if uploaded is not None and uploaded.file_id != st.session_state.get("last_upload_id"):
+        st.session_state.last_upload_id = uploaded.file_id
+        try:
+            replace_courses(clean_courses(pd.read_csv(uploaded)))
+            st.success(f"Loaded {len(st.session_state.courses)} courses.")
+        except ValueError as error:
+            st.error(f"Couldn't load that file. {error}")
 
 # --- Editable course table ---
 st.subheader("Your Courses")
@@ -68,11 +85,26 @@ edited = st.data_editor(
     },
 )
 
-# Only use rows where every column is filled in
-df = edited.dropna()
+# NEW: run the typed-in table through the same safety check (also merges "cs" and "CS")
+try:
+    df = clean_courses(edited)
+except ValueError as error:
+    st.error(str(error))
+    st.stop()
+
 if df.empty:
     st.info("Add your courses above, or click **Load sample data** in the sidebar to try it out.")
     st.stop()
+
+# NEW: download button (only shown when there are courses to save)
+with st.sidebar:
+    st.download_button(
+        "Download my courses",
+        data=df.to_csv(index=False),
+        file_name="my_courses.csv",
+        mime="text/csv",
+        width="stretch",
+    )
 
 # --- GPA math (used by both tabs) ---
 summary = semester_summary(df)
