@@ -1,7 +1,7 @@
 # UIUC Academic Analytics Dashboard
 
 This app is an interactive dashboard for UIUC students. You are able to track your courses, analyze your GPA overtime, look at trends, and look at how your GPA will change in the future based on future grades.
-
+**Live demo:** [uiuc-gpa-checker.streamlit.app](https://uiuc-gpa-checker.streamlit.app/)
 
 ![Dashboard screenshot](docs/screenshot.png)
 
@@ -52,7 +52,7 @@ The math, the charts, and the UI are in separate files so the GPA logic can be t
 ## Run It Locally
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/uiuc-academic-analytics.git
+git clone https://github.com/VeereshPatil1/uiuc-academic-analytics.git
 cd uiuc-academic-analytics
 python -m venv .venv
 .venv\Scripts\activate          # Windows (Mac/Linux: source .venv/bin/activate)
