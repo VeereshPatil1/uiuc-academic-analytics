@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import streamlit as st
 
@@ -7,7 +9,7 @@ from charts import (
     gpa_over_time_chart,
     grade_distribution_chart,
 )
-from gpa import GRADE_POINTS, department_summary, projected_gpa, semester_summary  # NEW: projected_gpa
+from gpa import GRADE_POINTS, department_summary, projected_gpa, required_gpa, semester_summary
 
 # Semester choices for the dropdown: Spring 2022, Summer 2022, Fall 2022, ... Fall 2030
 SEMESTERS = [f"{term} {year}" for year in range(2022, 2031) for term in ["Spring", "Summer", "Fall"]]
@@ -75,7 +77,7 @@ if df.empty:
 # --- GPA math (used by both tabs) ---
 summary = semester_summary(df)
 latest = summary.iloc[-1]
-current_gpa = latest["cumulative_gpa"]  # NEW: saved so the What-If tab can use it too
+current_gpa = latest["cumulative_gpa"]
 
 if len(summary) > 1:
     change = current_gpa - summary.iloc[-2]["cumulative_gpa"]
@@ -85,7 +87,6 @@ else:
 
 st.divider()
 
-# NEW: two tabs
 dashboard_tab, whatif_tab = st.tabs(["Dashboard", "What-If"])
 
 with dashboard_tab:
@@ -107,8 +108,8 @@ with dashboard_tab:
     left.plotly_chart(grade_distribution_chart(df), width="stretch")
     right.plotly_chart(gpa_by_department_chart(department_summary(df)), width="stretch")
 
-# NEW: the What-If tab
 with whatif_tab:
+    # --- What-if calculator ---
     st.subheader("What-If Calculator")
     st.write("Plan next semester's courses and the grades you expect, and see what happens to your GPA.")
 
@@ -139,3 +140,34 @@ with whatif_tab:
         col1.metric("Current GPA", f"{current_gpa:.2f}")
         col2.metric("Projected GPA", f"{new_gpa:.2f}", f"{new_gpa - current_gpa:+.2f}")
         col3.metric("Planned Credits", int(planned["credits"].sum()))
+
+    # --- Goal mode ---
+    st.divider()
+    st.subheader("Goal Mode")
+    st.write("Pick a target GPA and see what you'd need next semester to reach it.")
+
+    col1, col2 = st.columns(2)
+    target = col1.number_input("Target cumulative GPA", min_value=0.0, max_value=4.0, value=3.6, step=0.05)
+    next_credits = col2.number_input("Credits next semester", min_value=1, max_value=30, value=15, step=1)
+
+    needed = required_gpa(df, target, next_credits)
+
+    if needed > 4.0:
+        best_case = projected_gpa(df, pd.DataFrame({"credits": [next_credits], "grade": ["A"]}))
+        # Round DOWN so we never overstate the best possible GPA (3.6483 -> 3.64, not 3.65)
+        best_case = math.floor(best_case * 100) / 100
+        st.error(
+            f"A {target:.2f} isn't reachable next semester with {next_credits} credits. "
+            f"Even straight A's would bring you to {best_case:.2f}."
+        )
+    elif needed <= 0:
+        st.success(f"You're already set! Your cumulative GPA will stay at or above {target:.2f} no matter what.")
+    else:
+        # Find the lowest letter grade that meets the requirement
+        for letter in reversed(GRADE_POINTS):
+            if GRADE_POINTS[letter] >= needed:
+                break
+        st.info(
+            f"You need a **{needed:.2f}** GPA over your next {next_credits} credits "
+            f"(roughly a **{letter}** average) to reach a {target:.2f}."
+        )
