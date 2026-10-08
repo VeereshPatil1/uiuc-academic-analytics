@@ -1,5 +1,7 @@
 import plotly.express as px
+import plotly.express as px
 
+from gpa import GRADE_POINTS
 # Main chart color (a clear, colorblind-friendly blue)
 BLUE = "#2a78d6"
 ORANGE = "#eb6834"
@@ -35,4 +37,22 @@ def gpa_over_time_chart(summary):
     )
     fig.update_traces(line_width=2, marker_size=8, hovertemplate="%{y:.2f}")
     fig.update_layout(template="plotly_white", hovermode="x unified")
+    return fig
+
+def grade_distribution_chart(df):
+    """Bar chart of how many courses got each letter grade, best grade first."""
+    grades = df["grade"].str.strip().str.upper()
+    counts = grades.value_counts()
+    order = [grade for grade in GRADE_POINTS if grade in counts.index]
+    counts = counts.reindex(order).reset_index()
+    fig = px.bar(
+        counts,
+        x="grade",
+        y="count",
+        title="Grade Distribution",
+        labels={"grade": "Grade", "count": "Courses"},
+    )
+    fig.update_traces(marker_color=BLUE)
+    fig.update_layout(template="plotly_white")
+    fig.update_yaxes(dtick=1)
     return fig
