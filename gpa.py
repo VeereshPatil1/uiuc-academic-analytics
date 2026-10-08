@@ -28,3 +28,12 @@ def semester_sort_key(semester):
     term = parts[0].capitalize()
     year = int(parts[1])
     return year * 10 + TERM_ORDER[term]
+
+def add_gpa_columns(df):
+    """Return a copy of the courses table with grade points, quality points, and a semester sort key."""
+    df = df.copy()
+    df["grade_points"] = df["grade"].apply(grade_to_points)
+    df["quality_points"] = df["grade_points"] * df["credits"]
+    df["semester_key"] = df["semester"].apply(semester_sort_key)
+    # "stable" keeps courses in their original order within the same semester
+    return df.sort_values("semester_key", kind="stable")
