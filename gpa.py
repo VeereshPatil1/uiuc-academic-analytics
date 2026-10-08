@@ -15,3 +15,16 @@ def grade_to_points(grade):
         valid = ", ".join(GRADE_POINTS)
         raise ValueError(f"'{grade}' is not a valid grade. Use one of: {valid}")
     return GRADE_POINTS[cleaned]
+
+# Order of terms within a year (Spring comes first)
+TERM_ORDER = {"Spring": 1, "Summer": 2, "Fall": 3}
+
+
+def semester_sort_key(semester):
+    """Turn 'Fall 2024' into a number that sorts in time order (20243)."""
+    parts = semester.strip().split()
+    if len(parts) != 2 or parts[0].capitalize() not in TERM_ORDER or not parts[1].isdigit():
+        raise ValueError(f"'{semester}' is not a valid semester. Use a format like 'Fall 2024'.")
+    term = parts[0].capitalize()
+    year = int(parts[1])
+    return year * 10 + TERM_ORDER[term]
