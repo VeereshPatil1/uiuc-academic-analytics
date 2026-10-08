@@ -47,4 +47,6 @@ def semester_summary(df):
         quality_points=("quality_points", "sum"),
     )
     summary["semester_gpa"] = summary["quality_points"] / summary["credits"]
+    summary["cumulative_credits"] = summary["credits"].cumsum()
+    summary["cumulative_gpa"] = summary["quality_points"].cumsum() / summary["cumulative_credits"]
     return summary
