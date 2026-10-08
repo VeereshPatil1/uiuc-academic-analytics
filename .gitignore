@@ -3,3 +3,5 @@
 
 # Python's temporary files
 __pycache__/
+# pytest's temporary files
+.pytest_cache/
