@@ -1,7 +1,13 @@
 import pandas as pd
 import streamlit as st
 
-from gpa import semester_summary
+from charts import (
+    credits_by_semester_chart,
+    gpa_by_department_chart,
+    gpa_over_time_chart,
+    grade_distribution_chart,
+)
+from gpa import department_summary, semester_summary
 
 st.set_page_config(page_title="UIUC Academic Analytics", page_icon="🎓", layout="wide")
 
@@ -26,3 +32,14 @@ col1.metric("🎓 Cumulative GPA", f"{latest['cumulative_gpa']:.2f}", gpa_delta)
 col2.metric("📚 Total Credits", int(latest["cumulative_credits"]))
 col3.metric("📝 Courses", len(df))
 col4.metric("🗓️ Semesters", len(summary))
+
+st.divider()
+
+# Charts in a 2 x 2 grid
+left, right = st.columns(2)
+left.plotly_chart(gpa_over_time_chart(summary), width="stretch")
+right.plotly_chart(credits_by_semester_chart(summary), width="stretch")
+
+left, right = st.columns(2)
+left.plotly_chart(grade_distribution_chart(df), width="stretch")
+right.plotly_chart(gpa_by_department_chart(department_summary(df)), width="stretch")
