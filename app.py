@@ -9,7 +9,7 @@ from charts import (
     gpa_over_time_chart,
     grade_distribution_chart,
 )
-from gpa import (  # NEW: clean_courses
+from gpa import (
     GRADE_POINTS,
     clean_courses,
     department_summary,
@@ -19,7 +19,7 @@ from gpa import (  # NEW: clean_courses
 )
 
 # Semester choices for the dropdown: Spring 2018, Summer 2018, Fall 2018, ... Fall 2032
-SEMESTERS = [f"{term} {year}" for year in range(2018, 2033) for term in ["Spring", "Summer", "Fall"]]  # NEW: wider range
+SEMESTERS = [f"{term} {year}" for year in range(2018, 2033) for term in ["Spring", "Summer", "Fall"]]
 
 
 def empty_courses():
@@ -46,10 +46,10 @@ if "courses" not in st.session_state:
     st.session_state.courses = empty_courses()
     st.session_state.editor_version = 0
 
-st.title("🎓 UIUC Academic Analytics Dashboard")
-st.write("Track your courses, GPA, and academic trends.")
+st.title("UIUC Academic Analytics Dashboard")
+st.write("Track your courses, see your GPA trends, and plan ahead with what-if scenarios.")  # NEW: clearer tagline
 
-# --- Sidebar: load, clear, upload ---
+# --- Sidebar: load, clear, upload, download, about ---
 with st.sidebar:
     st.header("Data")
     if st.button("📂 Load sample data", width="stretch"):
@@ -57,7 +57,7 @@ with st.sidebar:
     if st.button("🗑️ Clear all courses", width="stretch"):
         replace_courses(empty_courses())
 
-    # NEW: upload a CSV (only processed once per new file)
+    # Upload a CSV (only processed once per new file)
     uploaded = st.file_uploader("📤 Upload a courses CSV", type="csv")
     if uploaded is not None and uploaded.file_id != st.session_state.get("last_upload_id"):
         st.session_state.last_upload_id = uploaded.file_id
@@ -66,6 +66,16 @@ with st.sidebar:
             st.success(f"Loaded {len(st.session_state.courses)} courses.")
         except ValueError as error:
             st.error(f"Couldn't load that file. {error}")
+
+    # NEW: reserve a spot for the download button (filled in later, once we have courses)
+    download_slot = st.empty()
+
+    # NEW: About section
+    st.divider()
+    with st.expander("ℹ️ About this app"):
+        st.write("This app is built by Veeresh Patil, I am currently a freshman majoring in Information Sciences + Data Science at UIUC. I used Python, pandas, Plotly, and Streamlit to make this app.")
+        st.write("This uses the official UIUC 4.0 grade scale, where A+ and A both count as 4.00, A- is 3.67, and so on, more info about this is on the official UIUC website. https://registrar.illinois.edu/courses-grades/explanation-of-grades/")
+        st.write("In this app your courses are never saved because the app uses no database and doesn't write any files. Because of this, to save your progress you have to use the download button to save your courses and upload them next time.")
 
 # --- Editable course table ---
 st.subheader("Your Courses")
@@ -85,7 +95,7 @@ edited = st.data_editor(
     },
 )
 
-# NEW: run the typed-in table through the same safety check (also merges "cs" and "CS")
+# Run the typed-in table through the same safety check (also merges "cs" and "CS")
 try:
     df = clean_courses(edited)
 except ValueError as error:
@@ -96,15 +106,14 @@ if df.empty:
     st.info("Add your courses above, or click **Load sample data** in the sidebar to try it out.")
     st.stop()
 
-# NEW: download button (only shown when there are courses to save)
-with st.sidebar:
-    st.download_button(
-        "Download my courses",
-        data=df.to_csv(index=False),
-        file_name="my_courses.csv",
-        mime="text/csv",
-        width="stretch",
-    )
+# NEW: fill the reserved sidebar spot with the download button
+download_slot.download_button(
+    "Download my courses",
+    data=df.to_csv(index=False),
+    file_name="my_courses.csv",
+    mime="text/csv",
+    width="stretch",
+)
 
 # --- GPA math (used by both tabs) ---
 summary = semester_summary(df)
