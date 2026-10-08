@@ -5,7 +5,7 @@ This app is an interactive dashboard for UIUC students. You are able to track yo
 
 ![Dashboard screenshot](docs/screenshot.png)
 
-## Features
+## Some Features
 
 - **GPA tracking:** Tracks semester and cumulative GPA, calculated with the official UIUC 4.0 scale(https://registrar.illinois.edu/courses-grades/explanation-of-grades/)
 - **Interactive charts:** Tracks GPA over time, grade distribution, GPA by department, and credits by semester
@@ -15,10 +15,10 @@ This app is an interactive dashboard for UIUC students. You are able to track yo
 - **CSV upload/download:** Save your courses and load them later with validation and clear error messages
 - **Privacy by design:** There is no database and no saved files so data only lives in your browser session.
 
-## Tech Stack
+## Tech
 
 
-| Python used for Core logic
+Python used for Core logic
 | pandas and NumPy used for data cleaning, grouping, and GPA calculations 
 | Plotly used for multiple interactive charts 
 | Streamlit used for the web app UI and deployment 
@@ -77,6 +77,6 @@ Fall 2024,CS 124,CS,3,A-
 Spring 2025,STAT 107,STAT,4,A
 ```
 
-## Author
+## Creator
 
 Veeresh Patil, freshman majoring in Information Sciences + Data Science at the University of Illinois Urbana-Champaign
