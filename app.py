@@ -7,7 +7,7 @@ from charts import (
     gpa_over_time_chart,
     grade_distribution_chart,
 )
-from gpa import GRADE_POINTS, department_summary, semester_summary
+from gpa import GRADE_POINTS, department_summary, projected_gpa, semester_summary  # NEW: projected_gpa
 
 # Semester choices for the dropdown: Spring 2022, Summer 2022, Fall 2022, ... Fall 2030
 SEMESTERS = [f"{term} {year}" for year in range(2022, 2031) for term in ["Spring", "Summer", "Fall"]]
@@ -72,31 +72,70 @@ if df.empty:
     st.info("Add your courses above, or click **Load sample data** in the sidebar to try it out.")
     st.stop()
 
-st.divider()
-
-# --- Headline numbers ---
+# --- GPA math (used by both tabs) ---
 summary = semester_summary(df)
 latest = summary.iloc[-1]
+current_gpa = latest["cumulative_gpa"]  # NEW: saved so the What-If tab can use it too
 
 if len(summary) > 1:
-    change = latest["cumulative_gpa"] - summary.iloc[-2]["cumulative_gpa"]
+    change = current_gpa - summary.iloc[-2]["cumulative_gpa"]
     gpa_delta = f"{change:+.2f} since last semester"
 else:
     gpa_delta = None
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Cumulative GPA", f"{latest['cumulative_gpa']:.2f}", gpa_delta)
-col2.metric("Total Credits", int(latest["cumulative_credits"]))
-col3.metric("Courses", len(df))
-col4.metric("Semesters", len(summary))
-
 st.divider()
 
-# --- Charts in a 2 x 2 grid ---
-left, right = st.columns(2)
-left.plotly_chart(gpa_over_time_chart(summary), width="stretch")
-right.plotly_chart(credits_by_semester_chart(summary), width="stretch")
+# NEW: two tabs
+dashboard_tab, whatif_tab = st.tabs(["Dashboard", "What-If"])
 
-left, right = st.columns(2)
-left.plotly_chart(grade_distribution_chart(df), width="stretch")
-right.plotly_chart(gpa_by_department_chart(department_summary(df)), width="stretch")
+with dashboard_tab:
+    # --- Headline numbers ---
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Cumulative GPA", f"{current_gpa:.2f}", gpa_delta)
+    col2.metric("Total Credits", int(latest["cumulative_credits"]))
+    col3.metric("Courses", len(df))
+    col4.metric("Semesters", len(summary))
+
+    st.divider()
+
+    # --- Charts in a 2 x 2 grid ---
+    left, right = st.columns(2)
+    left.plotly_chart(gpa_over_time_chart(summary), width="stretch")
+    right.plotly_chart(credits_by_semester_chart(summary), width="stretch")
+
+    left, right = st.columns(2)
+    left.plotly_chart(grade_distribution_chart(df), width="stretch")
+    right.plotly_chart(gpa_by_department_chart(department_summary(df)), width="stretch")
+
+# NEW: the What-If tab
+with whatif_tab:
+    st.subheader("What-If Calculator")
+    st.write("Plan next semester's courses and the grades you expect, and see what happens to your GPA.")
+
+    starter_plan = pd.DataFrame({
+        "course": ["Course 1", "Course 2", "Course 3", "Course 4"],
+        "credits": [3, 3, 4, 4],
+        "grade": ["A", "A-", "B+", "A"],
+    })
+    planned = st.data_editor(
+        starter_plan,
+        key="planned_editor",
+        num_rows="dynamic",
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "course": st.column_config.TextColumn("Course (optional)"),
+            "credits": st.column_config.NumberColumn("Credits", min_value=1, max_value=10, step=1, format="%d", required=True),
+            "grade": st.column_config.SelectboxColumn("Expected Grade", options=list(GRADE_POINTS), required=True),
+        },
+    )
+    planned = planned.dropna(subset=["credits", "grade"])
+
+    if planned.empty:
+        st.info("Add at least one planned course to see your projected GPA.")
+    else:
+        new_gpa = projected_gpa(df, planned)
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Current GPA", f"{current_gpa:.2f}")
+        col2.metric("Projected GPA", f"{new_gpa:.2f}", f"{new_gpa - current_gpa:+.2f}")
+        col3.metric("Planned Credits", int(planned["credits"].sum()))
