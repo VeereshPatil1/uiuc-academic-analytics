@@ -56,3 +56,28 @@ def grade_distribution_chart(df):
     fig.update_layout(template="plotly_white")
     fig.update_yaxes(dtick=1)
     return fig
+
+def gpa_by_department_chart(dept_summary):
+    """Horizontal bar chart of GPA in each department, highest at the top."""
+    fig = px.bar(
+        dept_summary,
+        x="gpa",
+        y="department",
+        orientation="h",
+        text_auto=".2f",
+        custom_data=["courses", "credits"],
+        title="GPA by Department",
+        labels={"gpa": "GPA", "department": "Department"},
+    )
+    fig.update_traces(
+        marker_color=BLUE,
+        hovertemplate=(
+            "%{y}<br>GPA: %{x:.2f}<br>"
+            "Courses: %{customdata[0]}<br>Credits: %{customdata[1]}"
+            "<extra></extra>"
+        ),
+    )
+    fig.update_layout(template="plotly_white")
+    fig.update_xaxes(range=[0, 4])
+    fig.update_yaxes(autorange="reversed")
+    return fig
