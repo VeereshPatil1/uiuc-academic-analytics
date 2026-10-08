@@ -1,8 +1,7 @@
 # UIUC Academic Analytics Dashboard
 
-An interactive dashboard for UIUC students to track courses, analyze GPA trends, and plan future semesters with what-if scenarios.
+This app is an interactive dashboard for UIUC students. You are able to track your courses, analyze your GPA overtime, look at trends, and look at how your GPA will change in the future based on future grades.
 
-🔗 Live demo: _coming soon_
 
 ![Dashboard screenshot](docs/screenshot.png)
 
@@ -18,31 +17,30 @@ An interactive dashboard for UIUC students to track courses, analyze GPA trends,
 
 ## Tech Stack
 
-| Tool | Used for |
-|---|---|
-| Python | Core logic |
-| pandas / NumPy | Data cleaning, grouping, and GPA calculations |
-| Plotly | Interactive charts |
-| Streamlit | Web app UI and deployment |
-| pytest | Automated tests for the GPA logic |
-| Git / GitHub | Version control |
+
+| Python used for Core logic
+| pandas and NumPy used for data cleaning, grouping, and GPA calculations 
+| Plotly used for multiple interactive charts 
+| Streamlit used for the web app UI and deployment 
+| pytest used for automated tests for the GPA logic 
+| Git and GitHub used for version control 
 
 ## Project Structure
 
 ```
-├── app.py                  # Streamlit web app (UI only)
-├── gpa.py                  # GPA math and data validation
-├── charts.py               # Plotly chart functions
-├── test_gpa.py             # pytest tests for gpa.py
-├── data/
-│   └── sample_courses.csv  # Sample data for the demo
-├── docs/
-│   └── screenshot.png      # README screenshot
-├── requirements.txt        # Pinned library versions
-└── .streamlit/config.toml  # Theme (Illini Orange)
+─ app.py                  # Streamlit web app
+─ gpa.py                  # GPA math and data validation
+─ charts.py               # Plotly chart functions
+─ test_gpa.py             # pytest tests for gpa.py
+─ data/
+   └── sample_courses.csv  # Sample data for the demo
+─ docs/
+  └── screenshot.png      # README screenshot
+─ requirements.txt        # Pinned library versions
+─ .streamlit/config.toml  # Theme (I decided for Illini Orange)
 ```
 
-The math, the charts, and the UI live in separate files, so the GPA logic can be tested on its own, without the website.
+The math, the charts, and the UI are in separate files so the GPA logic can be tested on its own without the website.
 
 ## Design Decisions
 
