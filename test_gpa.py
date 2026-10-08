@@ -1,8 +1,14 @@
 import pandas as pd
 import pytest
 
-from gpa import department_summary, grade_to_points, semester_sort_key, semester_summary
-
+from gpa import (
+    department_summary,
+    grade_to_points,
+    projected_gpa,
+    required_gpa,
+    semester_sort_key,
+    semester_summary,
+)
 
 def test_a_plus_counts_same_as_a():
     assert grade_to_points("A+") == 4.0
@@ -49,3 +55,29 @@ def test_department_gpa_is_weighted_by_credits():
     # CS: (4.0*3 + 2.0*1) / 4 credits = 3.5
     assert summary.loc["CS", "gpa"] == pytest.approx(3.5)
     assert summary.loc["MATH", "gpa"] == pytest.approx(3.0)
+
+def test_projected_gpa_adds_planned_courses():
+    df = pd.DataFrame({
+        "semester": ["Fall 2024"],
+        "course": ["CS 124"],
+        "department": ["CS"],
+        "credits": [4],
+        "grade": ["B"],
+    })
+    planned = pd.DataFrame({"credits": [4], "grade": ["A"]})
+    # (3.0*4 + 4.0*4) / 8 credits = 3.5
+    assert projected_gpa(df, planned) == pytest.approx(3.5)
+
+
+def test_required_gpa_to_reach_target():
+    df = pd.DataFrame({
+        "semester": ["Fall 2024"],
+        "course": ["CS 124"],
+        "department": ["CS"],
+        "credits": [4],
+        "grade": ["C"],
+    })
+    # Current: 2.0 over 4 credits. To reach 3.0 over 8 total credits,
+    # you need 24 total points - 8 current = 16 points over 4 credits = 4.0
+    assert required_gpa(df, target_gpa=3.0, next_credits=4) == pytest.approx(4.0)
+    

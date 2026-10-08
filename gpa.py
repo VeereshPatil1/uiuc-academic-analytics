@@ -61,3 +61,24 @@ def department_summary(df):
     )
     summary["gpa"] = summary["quality_points"] / summary["credits"]
     return summary.sort_values("gpa", ascending=False, kind="stable")
+
+def projected_gpa(df, planned):
+    """Cumulative GPA after adding planned courses (a table with 'credits' and 'grade' columns)."""
+    current = add_gpa_columns(df)
+    planned_points = planned["grade"].apply(grade_to_points) * planned["credits"]
+    total_points = current["quality_points"].sum() + planned_points.sum()
+    total_credits = current["credits"].sum() + planned["credits"].sum()
+    if total_credits == 0:
+        return None
+    return total_points / total_credits
+
+
+def required_gpa(df, target_gpa, next_credits):
+    """GPA needed over the next `next_credits` credits to reach `target_gpa` cumulative."""
+    if next_credits <= 0:
+        raise ValueError("Next semester credits must be greater than 0.")
+    current = add_gpa_columns(df)
+    current_points = current["quality_points"].sum()
+    current_credits = current["credits"].sum()
+    needed_points = target_gpa * (current_credits + next_credits) - current_points
+    return needed_points / next_credits
