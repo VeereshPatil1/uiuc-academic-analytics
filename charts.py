@@ -2,6 +2,7 @@ import plotly.express as px
 
 # Main chart color (a clear, colorblind-friendly blue)
 BLUE = "#2a78d6"
+ORANGE = "#eb6834"
 
 
 def credits_by_semester_chart(summary):
@@ -15,4 +16,23 @@ def credits_by_semester_chart(summary):
     )
     fig.update_traces(marker_color=BLUE)
     fig.update_layout(template="plotly_white")
+    return fig
+
+def gpa_over_time_chart(summary):
+    """Line chart of semester GPA and cumulative GPA over time."""
+    data = summary.rename(columns={
+        "semester_gpa": "Semester GPA",
+        "cumulative_gpa": "Cumulative GPA",
+    })
+    fig = px.line(
+        data,
+        x="semester",
+        y=["Semester GPA", "Cumulative GPA"],
+        markers=True,
+        title="GPA Over Time",
+        labels={"semester": "Semester", "value": "GPA", "variable": ""},
+        color_discrete_sequence=[BLUE, ORANGE],
+    )
+    fig.update_traces(line_width=2, marker_size=8, hovertemplate="%{y:.2f}")
+    fig.update_layout(template="plotly_white", hovermode="x unified")
     return fig
