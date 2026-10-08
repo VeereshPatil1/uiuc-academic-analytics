@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from gpa import grade_to_points, semester_sort_key, semester_summary
+from gpa import department_summary, grade_to_points, semester_sort_key, semester_summary
 
 
 def test_a_plus_counts_same_as_a():
@@ -35,3 +35,17 @@ def test_cumulative_gpa_is_weighted_by_credits():
     })
     summary = semester_summary(df)
     assert summary["cumulative_gpa"].iloc[-1] == pytest.approx(36 / 17)
+
+
+def test_department_gpa_is_weighted_by_credits():
+    df = pd.DataFrame({
+        "semester": ["Fall 2024", "Fall 2024", "Fall 2024"],
+        "course": ["CS 124", "CS 100", "MATH 221"],
+        "department": ["CS", "CS", "MATH"],
+        "credits": [3, 1, 4],
+        "grade": ["A", "C", "B"],
+    })
+    summary = department_summary(df).set_index("department")
+    # CS: (4.0*3 + 2.0*1) / 4 credits = 3.5
+    assert summary.loc["CS", "gpa"] == pytest.approx(3.5)
+    assert summary.loc["MATH", "gpa"] == pytest.approx(3.0)

@@ -50,3 +50,14 @@ def semester_summary(df):
     summary["cumulative_credits"] = summary["credits"].cumsum()
     summary["cumulative_gpa"] = summary["quality_points"].cumsum() / summary["cumulative_credits"]
     return summary
+
+def department_summary(df):
+    """One row per department with total credits, course count, and department GPA (highest first)."""
+    courses = add_gpa_columns(df)
+    summary = courses.groupby("department", as_index=False).agg(
+        credits=("credits", "sum"),
+        courses=("course", "count"),
+        quality_points=("quality_points", "sum"),
+    )
+    summary["gpa"] = summary["quality_points"] / summary["credits"]
+    return summary.sort_values("gpa", ascending=False, kind="stable")
