@@ -37,3 +37,14 @@ def add_gpa_columns(df):
     df["semester_key"] = df["semester"].apply(semester_sort_key)
     # "stable" keeps courses in their original order within the same semester
     return df.sort_values("semester_key", kind="stable")
+
+def semester_summary(df):
+    """One row per semester with total credits, course count, and semester GPA."""
+    courses = add_gpa_columns(df)
+    summary = courses.groupby(["semester_key", "semester"], as_index=False).agg(
+        credits=("credits", "sum"),
+        courses=("course", "count"),
+        quality_points=("quality_points", "sum"),
+    )
+    summary["semester_gpa"] = summary["quality_points"] / summary["credits"]
+    return summary
